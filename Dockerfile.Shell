@@ -1,0 +1,21 @@
+FROM node:14-alpine3.14 as builder
+
+COPY package.json  ./
+
+RUN yarn install 
+
+RUN mkdir /shell
+
+RUN mv ./node_modules ./shell
+
+WORKDIR /shell
+
+COPY . .
+
+RUN yarn run ng build --prod --project=shell
+
+FROM nginx
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /shell/dist/shell /usr/share/nginx/html
+
+CMD ["nginx", "-g", "daemon off;"]
